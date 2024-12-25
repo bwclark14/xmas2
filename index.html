@@ -41,11 +41,11 @@
             margin-bottom: 20px;
         }
 
-        .code-input input {
+        .code-input .icon {
             width: 50px;
             height: 50px;
-            text-align: center;
-            font-size: 1.5rem;
+            background-size: cover;
+            cursor: pointer;
             border: 2px solid #ffa500;
             border-radius: 5px;
         }
@@ -90,12 +90,12 @@
 <body>
     <div class="container">
         <h1>Christmas Mastermind</h1>
-        <div class="instructions">Guess the 4-digit Christmas code! Each digit ranges from 1 to 6.</div>
+        <div class="instructions">Guess the 4 Christmas icons! Tap each icon to change it.</div>
         <div class="code-input" id="codeInput">
-            <input type="number" min="1" max="6" id="digit1">
-            <input type="number" min="1" max="6" id="digit2">
-            <input type="number" min="1" max="6" id="digit3">
-            <input type="number" min="1" max="6" id="digit4">
+            <div class="icon" id="icon1"></div>
+            <div class="icon" id="icon2"></div>
+            <div class="icon" id="icon3"></div>
+            <div class="icon" id="icon4"></div>
         </div>
         <button class="submit-button" id="submit">Submit</button>
         <div class="feedback" id="feedback"></div>
@@ -103,34 +103,50 @@
     </div>
 
     <script>
-        const secretCode = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+        const icons = [
+            "url('reindeer.png')",
+            "url('candy-cane.png')",
+            "url('christmas-tree.png')",
+            "url('christmas-bell.png')",
+            "url('hat.png')",
+            "url('christmas-wreath.png')"
+        ];
+
+        const secretCode = Array.from({ length: 4 }, () => Math.floor(Math.random() * icons.length));
         let attempts = 0;
 
         const feedbackElement = document.getElementById("feedback");
         const restartButton = document.getElementById("restart");
 
-        function checkCode() {
-            const inputDigits = [
-                document.getElementById("digit1").value,
-                document.getElementById("digit2").value,
-                document.getElementById("digit3").value,
-                document.getElementById("digit4").value
-            ].map(Number);
+        function updateIcon(element, currentIndex) {
+            const newIndex = (currentIndex + 1) % icons.length;
+            element.dataset.index = newIndex;
+            element.style.backgroundImage = icons[newIndex];
+        }
 
-            if (inputDigits.includes(NaN) || inputDigits.some(d => d < 1 || d > 6)) {
-                feedbackElement.textContent = "Please enter valid numbers between 1 and 6.";
-                return;
-            }
+        function initializeIcons() {
+            document.querySelectorAll(".icon").forEach((icon, index) => {
+                icon.dataset.index = 0;
+                icon.style.backgroundImage = icons[0];
+                icon.onclick = () => {
+                    const currentIndex = parseInt(icon.dataset.index, 10);
+                    updateIcon(icon, currentIndex);
+                };
+            });
+        }
+
+        function checkCode() {
+            const inputIcons = Array.from(document.querySelectorAll(".icon"), icon => parseInt(icon.dataset.index, 10));
 
             attempts++;
             let correctPosition = 0;
-            let correctNumber = 0;
+            let correctIcon = 0;
 
-            inputDigits.forEach((digit, index) => {
-                if (digit === secretCode[index]) {
+            inputIcons.forEach((iconIndex, index) => {
+                if (iconIndex === secretCode[index]) {
                     correctPosition++;
-                } else if (secretCode.includes(digit)) {
-                    correctNumber++;
+                } else if (secretCode.includes(iconIndex)) {
+                    correctIcon++;
                 }
             });
 
@@ -138,7 +154,7 @@
                 feedbackElement.textContent = `Congratulations! You've cracked the code in ${attempts} attempts!`;
                 restartButton.classList.add("visible");
             } else {
-                feedbackElement.textContent = `Correct Numbers in Correct Position: ${correctPosition}, Correct Numbers in Wrong Position: ${correctNumber}`;
+                feedbackElement.textContent = `Correct Icons in Correct Position: ${correctPosition}, Correct Icons in Wrong Position: ${correctIcon}`;
             }
         }
 
@@ -148,9 +164,11 @@
             attempts = 0;
             feedbackElement.textContent = "";
             restartButton.classList.remove("visible");
-            document.querySelectorAll(".code-input input").forEach(input => input.value = "");
-            secretCode.splice(0, 4, ...Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1));
+            secretCode.splice(0, 4, ...Array.from({ length: 4 }, () => Math.floor(Math.random() * icons.length)));
+            initializeIcons();
         };
+
+        initializeIcons();
     </script>
 </body>
 </html>
